@@ -5,7 +5,7 @@ import json
 import numpy as np
 import pandas as pd
 import streamlit as st
-#import streamlit.components.v1 as components
+import streamlit.components.v1 as components
 
 
 # ============================================================
@@ -1010,9 +1010,4 @@ html = html_template.safe_substitute(
     youtube_id=YOUTUBE_ID,
 )
 
-#components.html(html, height=900, scrolling=False)
-st.iframe(
-    html,
-    height=900,
-    scrolling=False
-)
+components.html(html, height=900, scrolling=False)
