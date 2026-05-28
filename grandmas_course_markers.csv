@@ -1,0 +1,19 @@
+mile,marker_type,name,items,notes
+0.0,start,Start,Start area,"No backpacks allowed in start areas or on start line transportation. Hydration packs or vests, fuel belts, and handheld water bottles are allowed within race limits."
+3.0,aid_station,Aid Station Mile 3,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+5.0,aid_station,Aid Station Mile 5,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+7.0,aid_station,Aid Station Mile 7,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+9.0,aid_station,Aid Station Mile 9,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid; Hiccup Earth reusable cups,Reusable cup station. Do not take cups with you; toss used cups to the side of the road or into marked collection bins.
+11.0,aid_station,Aid Station Mile 11,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+13.0,aid_station,Aid Station Mile 13,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+15.0,aid_station,Aid Station Mile 15,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+17.0,aid_station,Aid Station Mile 17,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid; PURE FUEL by Anderson’s Maple Syrup,
+19.0,aid_station,Aid Station Mile 19,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid; fresh fruit near mile 19,
+20.0,aid_station,Aid Station Mile 20,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+21.0,aid_station,Aid Station Mile 21,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+22.0,aid_station,Aid Station Mile 22,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+23.0,aid_station,Aid Station Mile 23,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid; fresh fruit near mile 23.5 nearby,
+23.5,food,Fresh Fruit,Fresh fruit by Super One Foods,Near mile 23.5
+24.0,aid_station,Aid Station Mile 24,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid,
+25.0,aid_station,Aid Station Mile 25,Water; Powerade Ion4 Mountain Berry Blast; toilets; first aid; Hiccup Earth reusable cups,Reusable cup station. Do not take cups with you; toss used cups to the side of the road or into marked collection bins.
+26.2,finish,Finish,Finish area,Finish in Canal Park area.
