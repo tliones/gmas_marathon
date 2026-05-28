@@ -18,10 +18,10 @@ st.set_page_config(
 )
 
 DATA_DIR = Path("data")
-COURSE_POINTS_FILE = DATA_DIR / "grandmas_course_points.csv"
-COURSE_MARKERS_FILE = DATA_DIR / "grandmas_course_markers.csv"
-VIDEO_SYNC_FILE = DATA_DIR / "video_mile_sync_template.csv"
-SUMMARY_FILE = DATA_DIR / "summary.json"
+COURSE_POINTS_FILE = "grandmas_course_points.csv"
+COURSE_MARKERS_FILE = "grandmas_course_markers.csv"
+VIDEO_SYNC_FILE = "video_mile_sync_template.csv"
+SUMMARY_FILE = "summary.json"
 
 YOUTUBE_URL = "https://www.youtube.com/watch?v=lLwf_fIW0L8"
 
