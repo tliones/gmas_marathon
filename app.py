@@ -5,7 +5,6 @@ import json
 import numpy as np
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 # ============================================================
@@ -319,7 +318,6 @@ html_template = Template(r"""
 <html>
 <head>
   <meta charset="utf-8" />
-  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -592,8 +590,8 @@ html_template = Template(r"""
           <label for="seekSlider"><b>Video seek:</b> <span id="seekLabel">0:00</span></label>
           <input id="seekSlider" type="range" min="0" max="369" value="1" step="1" />
           <button onclick="seekToSlider()">Jump</button>
-          <button onclick="player.playVideo()">Play</button>
-          <button onclick="player.pauseVideo()">Pause</button>
+          <button onclick="playVideo()">Play</button>
+          <button onclick="pauseVideo()">Pause</button>
         </div>
       </div>
 
@@ -684,6 +682,7 @@ let player;
 let map;
 let courseMarker;
 let courseLine;
+let liveUpdateTimer;
 
 const elevationX = course.map(d => d.mile);
 const elevationY = course.map(d => d.elevation_smooth_ft);
@@ -1060,16 +1059,36 @@ function updateLiveDisplay() {
 }
 
 function seekToSlider() {
+  if (!player || typeof player.seekTo !== "function") return;
+
   const t = Number(document.getElementById("seekSlider").value);
   player.seekTo(t, true);
   updateLiveDisplay();
+}
+
+function playVideo() {
+  if (player && typeof player.playVideo === "function") {
+    player.playVideo();
+  }
+}
+
+function pauseVideo() {
+  if (player && typeof player.pauseVideo === "function") {
+    player.pauseVideo();
+  }
 }
 
 document.getElementById("seekSlider").addEventListener("input", function() {
   document.getElementById("seekLabel").innerText = formatSeconds(Number(this.value));
 });
 
-function onYouTubeIframeAPIReady() {
+function createYouTubePlayer() {
+  if (player) return;
+
+  if (!window.YT || typeof YT.Player !== "function") {
+    return;
+  }
+
   player = new YT.Player("player", {
     videoId: "$youtube_id",
     playerVars: {
@@ -1082,11 +1101,56 @@ function onYouTubeIframeAPIReady() {
         initializePlots();
         initializeMap();
         updateLiveDisplay();
-        setInterval(updateLiveDisplay, 500);
+
+        if (liveUpdateTimer) {
+          clearInterval(liveUpdateTimer);
+        }
+        liveUpdateTimer = setInterval(updateLiveDisplay, 500);
+      },
+      onError: function(event) {
+        document.getElementById("statusText").innerText = "Video player failed to load.";
       }
     }
   });
 }
+
+window.onYouTubeIframeAPIReady = createYouTubePlayer;
+
+function loadYouTubeIframeApi() {
+  if (window.YT && typeof YT.Player === "function") {
+    createYouTubePlayer();
+    return;
+  }
+
+  if (document.getElementById("youtube-iframe-api")) return;
+
+  const tag = document.createElement("script");
+  tag.id = "youtube-iframe-api";
+  tag.src = "https://www.youtube.com/iframe_api";
+  tag.async = true;
+  tag.onerror = function() {
+    document.getElementById("statusText").innerText = "Could not load YouTube API.";
+  };
+  document.head.appendChild(tag);
+
+  const retryTimer = setInterval(function() {
+    if (player) {
+      clearInterval(retryTimer);
+      return;
+    }
+
+    if (window.YT && typeof YT.Player === "function") {
+      createYouTubePlayer();
+      clearInterval(retryTimer);
+    }
+  }, 250);
+
+  setTimeout(function() {
+    clearInterval(retryTimer);
+  }, 10000);
+}
+
+loadYouTubeIframeApi();
 </script>
 </body>
 </html>
@@ -1099,4 +1163,6 @@ html = html_template.safe_substitute(
     youtube_id=YOUTUBE_ID,
 )
 
-components.html(html, height=900, scrolling=False)
+# Streamlit 1.56+ deprecates st.components.v1.html. This app needs an iframe
+# because the dashboard is a full HTML document with JavaScript libraries.
+st.iframe(html, height=900)
