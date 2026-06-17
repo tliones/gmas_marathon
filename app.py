@@ -439,34 +439,6 @@ html_template = Template(r"""
       width: 100% !important;
       height: 100% !important;
     }
-
-    .controls {
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 13px;
-    }
-
-    input[type=range] {
-      width: 100%;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 7px 11px;
-      cursor: pointer;
-      margin-right: 6px;
-      font-size: 13px;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
     .metrics {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -585,14 +557,6 @@ html_template = Template(r"""
         <div class="video-wrap">
           <div id="player"></div>
         </div>
-
-        <div class="controls">
-          <label for="seekSlider"><b>Video seek:</b> <span id="seekLabel">0:00</span></label>
-          <input id="seekSlider" type="range" min="0" max="369" value="1" step="1" />
-          <button onclick="seekToSlider()">Jump</button>
-          <button onclick="playVideo()">Play</button>
-          <button onclick="pauseVideo()">Pause</button>
-        </div>
       </div>
 
       <div class="panel context-panel">
@@ -688,9 +652,6 @@ const elevationX = course.map(d => d.mile);
 const elevationY = course.map(d => d.elevation_smooth_ft);
 const gradeY = course.map(d => d.grade_smooth_percent);
 const latLngs = course.map(d => [d.lat, d.lon]);
-
-document.getElementById("seekSlider").max = Math.round(sync[sync.length - 1].video_second);
-document.getElementById("seekSlider").value = Math.round(sync[0].video_second);
 
 function formatSeconds(seconds) {
   seconds = Math.round(seconds);
@@ -1017,10 +978,21 @@ function initializeMap() {
   map.fitBounds(courseLine.getBounds(), {padding: [8, 8]});
 }
 
-function updateLiveDisplay() {
-  if (!player || typeof player.getCurrentTime !== "function") return;
+function isPlayerReady() {
+  return player && typeof player.getCurrentTime === "function";
+}
 
-  const t = player.getCurrentTime();
+function normalizeVideoSecond(seconds) {
+  const parsed = Number(seconds);
+  if (Number.isFinite(parsed)) return parsed;
+
+  const fallback = Number(sync[0] && sync[0].video_second);
+  return Number.isFinite(fallback) ? fallback : 0;
+}
+
+function renderDisplayAtTime(seconds, options = {}) {
+  const panMap = options.panMap !== false;
+  const t = normalizeVideoSecond(seconds);
   const mile = interpolateMileFromVideo(t);
   const p = nearestCoursePoint(mile);
   const next = summarizeNextMile(mile);
@@ -1036,51 +1008,49 @@ function updateLiveDisplay() {
   document.getElementById("cueText").innerText = cue.text;
   document.getElementById("statusText").innerText = "Mile " + mile.toFixed(2) + " • " + formatSeconds(t);
 
-  document.getElementById("seekSlider").value = Math.round(t);
-  document.getElementById("seekLabel").innerText = formatSeconds(t);
+  const elevationPlot = document.getElementById("elevationPlot");
+  if (window.Plotly && elevationPlot && elevationPlot.data && elevationPlot.data.length >= 3) {
+    try {
+      Plotly.restyle("elevationPlot", {
+        x: [[mile]],
+        y: [[p.elevation_smooth_ft]]
+      }, [2]);
+    } catch (error) {
+      console.warn("Elevation plot update skipped", error);
+    }
+  }
 
-  Plotly.restyle("elevationPlot", {
-    x: [[mile]],
-    y: [[p.elevation_smooth_ft]]
-  }, [2]);
+  const gradePlot = document.getElementById("gradePlot");
+  if (window.Plotly && gradePlot && gradePlot.data && gradePlot.data.length >= 2) {
+    try {
+      Plotly.restyle("gradePlot", {
+        x: [[mile]],
+        y: [[p.grade_smooth_percent]]
+      }, [1]);
+    } catch (error) {
+      console.warn("Grade plot update skipped", error);
+    }
+  }
 
-  Plotly.restyle("gradePlot", {
-    x: [[mile]],
-    y: [[p.grade_smooth_percent]]
-  }, [1]);
-
-  if (courseMarker) {
+  if (courseMarker && map) {
     const latlng = [p.lat, p.lon];
     courseMarker.setLatLng(latlng);
-    map.panTo(latlng, {animate: true, duration: 0.25});
+    if (panMap) {
+      map.panTo(latlng, {animate: true, duration: 0.25});
+    }
   }
 
   updateMarkers(mile);
 }
 
-function seekToSlider() {
-  if (!player || typeof player.seekTo !== "function") return;
+function updateLiveDisplay() {
+  if (!isPlayerReady()) return;
 
-  const t = Number(document.getElementById("seekSlider").value);
-  player.seekTo(t, true);
-  updateLiveDisplay();
+  const current = Number(player.getCurrentTime());
+  if (!Number.isFinite(current)) return;
+
+  renderDisplayAtTime(current, {panMap: true});
 }
-
-function playVideo() {
-  if (player && typeof player.playVideo === "function") {
-    player.playVideo();
-  }
-}
-
-function pauseVideo() {
-  if (player && typeof player.pauseVideo === "function") {
-    player.pauseVideo();
-  }
-}
-
-document.getElementById("seekSlider").addEventListener("input", function() {
-  document.getElementById("seekLabel").innerText = formatSeconds(Number(this.value));
-});
 
 function createYouTubePlayer() {
   if (player) return;
@@ -1163,6 +1133,5 @@ html = html_template.safe_substitute(
     youtube_id=YOUTUBE_ID,
 )
 
-# Streamlit 1.56+ deprecates st.components.v1.html. This app needs an iframe
-# because the dashboard is a full HTML document with JavaScript libraries.
+# Embed the full HTML dashboard in an iframe.
 st.iframe(html, height=900)
